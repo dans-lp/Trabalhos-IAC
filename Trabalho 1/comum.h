@@ -58,4 +58,11 @@ extern int threadsPerBlock;
 extern int blocksPerGrid;
 extern int maxPrint;
 
+/*
+ Protótipos auxiliares de equation.cpp
+ ! deletar depois !!! */
+
+// gera arquivos binarios com os valores das respectivas matrizes declaradas pelo nome
+void geraArquivos(char *nomeA, char *nomeB, int nIncognitas);
+
 #endif

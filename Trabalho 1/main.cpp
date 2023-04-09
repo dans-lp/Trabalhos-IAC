@@ -45,6 +45,11 @@ int main(int argc, char *argv[]) {
 
     nIncognitas = atoi(argv[ARG_N_INCOGNITAS]);
     */
+    
+    // ! deletar depois
+    //Gera arquivo da matrix A e vetor B
+    geraArquivos(filenameMatrizA, filenameVetorB, nIncognitas);
+    
     // Lê os dados dos arquivos
     // Matriz A
     hmA = leMatriz(filenameMatrizA, nIncognitas);
