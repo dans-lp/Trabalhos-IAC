@@ -63,6 +63,7 @@ int main(int argc, char *argv[]) {
     gettimeofday(&start, NULL);
 
     processaVetores(hmA, hvB, nIncognitas);
+    
 
     // desliga o cronômetro
     gettimeofday(&stop, NULL);

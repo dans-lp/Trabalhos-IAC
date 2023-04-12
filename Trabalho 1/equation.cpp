@@ -7,6 +7,21 @@
 #include "comum.h"
 #include "timer.h"
 
+
+__m256d GeraMultiplicadorAVX(double *hmA, int contador)
+{
+  int valorIndex;
+  type_data valorCoeficiente;
+  type_data varK;
+
+  valorIndex = (nIncognitas * contador) + contador;
+  valorCoeficiente = *(hmA + valorIndex);
+  varK = *(hmA + valorIndex + nIncognitas) / valorCoeficiente;
+
+  return _mm256_set1_pd(varK);
+}
+
+/*
 type_data *SalvaLinha(double *hmA)
 {
   __m256d avxTemp;
@@ -19,34 +34,46 @@ type_data *SalvaLinha(double *hmA)
 
   return linhaCoeficientes;
 }
+*/
 
 void processaVetores(double *hmA, double *hvB, int nIncognitas)
 {
-  fprintf(stderr, "\n\n T1 IAC");
-  fprintf(stderr, "\n============================================");
-  fprintf(stderr, "\n----> função processaVetores!!!");
-  fprintf(stderr, "\n============================================");
-  fprintf(stderr, "\n--------------------------------------------\n\n");
-
   // variáveis para guardar valores das equações
-  type_data *coeficienteParaZerar;
   type_data *coeficientesOriginais_vB = (type_data *)aligned_alloc(32, sizeof(type_data) * nIncognitas);
-  type_data *coeficientesOriginais_mA = (type_data *)aligned_alloc(32, sizeof(type_data) * nIncognitas);
+  //type_data *coeficientesOriginais_mA = (type_data *)aligned_alloc(32, sizeof(type_data) * nIncognitas);
   type_data varK;
 
   // vetores AVX
   __m256d coeficientes_mA;
+  __m256d coeficientesOriginaisAVX_mA;
   __m256d multiplicadorAVX;
+  __m256d avxTemp;
+  __m256  coeficientesResultantesAVX_mA;
+  //type_data *linhaCoeficientes = (type_data *)aligned_alloc(32, sizeof(type_data) * nIncognitas);
 
   
-  type_data multiplicadorIndex;
-  for (int i = 0;  i < (nIncognitas - 1); i++)
-  {
-    multiplicadorIndex = *(hmA + ((nIncognitas * i) + i));
-    multiplicadorAVX =  _mm256_set1_pd(multiplicadorIndex);
+  for (int i = 0;  i < (nIncognitas - 1); i++){
     
-    coeficientesOriginais_mA = SalvaLinha(hmA);
+    multiplicadorAVX = GeraMultiplicadorAVX(hmA, i);
     
+    for (int j = 0; j < nIncognitas; j += 4)
+    {
+      // coeficientesOriginais_mA = SalvaLinha(hmA);
+      
+      coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + j);
+      /*
+        ? 1.multiplicação AVX: multiplicador x coeficientes originais
+        ? 2.subtração AVX: coeficientes origianais - coeficientes alterados
+        ? 3.grava vetor alterado
+        ? 4.alteração do vetor B igual passos acima 
+        ? 5.grava vetor
+      */
+
+      //_mm256_store_pd((linhaCoeficientes + i), avxTemp);
+      
+    }
+    
+
   }
   
 }
