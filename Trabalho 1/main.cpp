@@ -77,7 +77,7 @@ int main(int argc, char *argv[]) {
     fprintf(arq, "%s,%f,", argv[0], timedifference_msec(start, stop));
     fclose(arq);
 
-    fprintf(stderr, "Vetores transformados:\n");
+    fprintf(stderr, "\n\n--------------------------------------------\nVetores transformados:\n");
     exibeMatriz(hmA, nIncognitas);
     exibeVetor(hvB, nIncognitas);
 
