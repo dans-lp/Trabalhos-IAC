@@ -68,8 +68,9 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   type_data *coeficientesDiagonais;
   
   int inicioColuna;
-  int inicioLinha;
-  
+  int linha;
+  int linhaInicio;
+
   // ? __m256d coeficientes_mA;
   __m256d coeficientesOriginaisAVX_mA;
   __m256d multiplicadorAVX;
@@ -78,19 +79,20 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
 
   coeficientesDiagonais = ArmazenaCoeficientesDiagonais(hmA);
 
-  //loop operando pelo index do array de diagonais e por consequente
-  //por index de coluna também
-  for (int indexArray = 0; indexArray < (nIncognitas - 1); indexArray++){
+  //loop operando pelo index do array de diagonais (e por consequente
+  //por index de coluna também)
+  for (int coluna = 0; coluna < (nIncognitas - 1); coluna++){
 
-    diagonal = *(coeficientesDiagonais + indexArray);    
-    inicioLinha = (indexArray + 1) * nIncognitas; //as operações começam a partir da linha 1
-    inicioColuna = (indexArray * nIncognitas);
+
+    diagonal = *(coeficientesDiagonais + coluna);    
+    linha = (coluna + 1) * nIncognitas; //as operações começam a partir da linha 1
+    linhaInicio = linha + coluna;
 
     //loop operando por linha
     while(inicioColuna < (nIncognitas - 1)){
     
 
-      valAbaixo = *(hmA + inicioLinha);
+      valAbaixo = *(hmA + linha);
 
       varK = valAbaixo / diagonal;
       multiplicadorAVX = _mm256_set1_pd(varK);
@@ -102,7 +104,7 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       //loop operando sobe os coeficientes da linha
       for (int j = 0; j < nIncognitas; j += 4) 
       {
-        coeficientesOriginaisAVX_mA = _mm256_load_pd((hmA+inicioLinha) + j);
+        coeficientesOriginaisAVX_mA = _mm256_load_pd((hmA+linha) + j);
         /*
           ? 1.multiplicação AVX: multiplicador x coeficientes originais
           ? 2.subtração AVX: coeficientes origianais - coeficientes alterados
