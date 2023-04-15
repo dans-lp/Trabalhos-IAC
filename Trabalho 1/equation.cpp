@@ -10,19 +10,6 @@
 
 // === Cabeçalho equation.cpp =================================
 //=============================================================
-/*Cálculo dos indexes intermerdiarios durante o armazenamento
-  dos valores diagonais da matrix.
-  
-  O loop da função ArmazenaCoeficientesDiagonais opera
-  de 4 em 4 valores para armazenalos diretamente num vetor AVX,
-  portanto essa função foi criada para ser considerado dentro
-  daquele loop valores de i entre 0..3 , 4..7, 8..11, ...*/
-int IndexIntermediario(int i, int k);
-
-/*Seleciona os valores da diagonal da matriz apontada por hmA
-  e através de um vetor AVX armazena estes no vetor de retorno*/
-type_data *ArmazenaCoeficientesDiagonais(type_data *hmA);
-
 void processaVetores(double *hmA, double *hvB, int nIncognitas);
 
 /*Gera arquivos binarios contendo respectivamente uma matriz A
@@ -53,10 +40,11 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     linha = (coluna + 1) * nIncognitas; //as operações começam a partir da linha 1
     linhaInicio = linha + coluna;
-    //coluna  = 
 
+    /*
     //?
     printf("\n\n ---> iteração %d",coluna);
+    */
     //loop operando por linha, começando abaixo da diagonal
     for (int i = 0; i < (nIncognitas - (coluna + 1)); i++){
       
@@ -65,33 +53,31 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       varK = coeficienteInicial / diagonal;
       multiplicadorAVX = _mm256_set1_pd(varK);
 
+      /*
       // ? teste loop 2
       printf("\n\n === teste valor k ===\n");
       printf("val: %f | diagonal: %f",coeficienteInicial, diagonal);
+      */
 
       //loop operando sobe os coeficientes da linha
-      int coeficienteIndex = 0;
-      for (; coeficienteIndex < nIncognitas; coeficienteIndex += 4){
-        coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + linha + coeficienteIndex);
-        /*
-          ? 1.multiplicação AVX: multiplicador x coeficientes originais
-          ? 2.subtração AVX: coeficientes origianais - coeficientes alterados
-          ? 3.grava vetor alterado
-          ? 4.alteração do vetor B igual passos acima 
-          ? 5.grava vetor
-        */
+      for (int coeficienteIndex = 0; coeficienteIndex < nIncognitas; coeficienteIndex += 4){
+        
+        coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + inicioIndex + coeficienteIndex);
         avxTemp = _mm256_mul_pd(coeficientesOriginaisAVX_mA, multiplicadorAVX);
         coeficientesResultantesAVX_mA = _mm256_sub_pd(coeficientesOriginaisAVX_mA,avxTemp);
-       // _mm256_store_pd(hmA + linha + coeficienteIndex, coeficientesResultantesAVX_mA);
-      }
+       //_mm256_store_pd(hmA + linha + coeficienteIndex, coeficientesResultantesAVX_mA);
+      
         //? teste loop 3
         /*
-        printf("\n\n ===== teste valores originais ====\n");
-        for (int i = 0; i < 4; i++)
-        {
-          printf(" %f |",*(hmA + linha + coeficienteIndex));
+        if(coeficienteIndex == 0){
+          printf("\n\n ===== teste valores originais ====\n");
+          for (int i = 0; i < 4; i++){
+            printf(" %f |",*(hmA + inicioIndex + i));
+          }
         }
         */
+      }
+      // ? alteração do valor do vetir B
     }
   }
 }
