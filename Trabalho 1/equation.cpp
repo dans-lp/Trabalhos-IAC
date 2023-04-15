@@ -30,46 +30,16 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas);
 void geraArquivos(char *nomeA, char *nomeB, int nIncognitas);
 //=============================================================
 
-int IndexIntermediario(int i, int k)
-{
-  return (nIncognitas * (i + k)) + (i + k);
-}
-
-type_data *ArmazenaCoeficientesDiagonais(type_data *hmA) 
-{
-  type_data *coeficientesDiagonais = (type_data *)aligned_alloc(32, sizeof(type_data) * nIncognitas);
-  __m256d tempAVX;
-
-  for (int i = 0; i < nIncognitas - 1; i += 4) {
-    tempAVX = _mm256_setr_pd(
-      *(hmA + IndexIntermediario(i,0)),
-      *(hmA + IndexIntermediario(i,1)),
-      *(hmA + IndexIntermediario(i,2)),
-      *(hmA + IndexIntermediario(i,3))
-    );
-    _mm256_store_pd((coeficientesDiagonais + i), tempAVX);
-  }
-  // !
-  /*!
-    //printf da array das diagonais ; check
-    
-   /printf("\n\ndiagonais --->\n");
-    for (int i = 0; i < nIncognitas - 1; i++){printf(" %f | ",coeficientesDiagonais[i]);}
-  */
-
-  return coeficientesDiagonais;
-}
-
 void processaVetores(double *hmA, double *hvB, int nIncognitas)
 {
   type_data diagonal;
-  type_data valAbaixo; 
+  type_data coeficienteInicial; 
   type_data varK;
-  type_data *coeficientesDiagonais;
   
-  int inicioColuna;
+  int coluna;
   int linha;
   int linhaInicio;
+  int inicioIndex;
 
   // ? __m256d coeficientes_mA;
   __m256d coeficientesOriginaisAVX_mA;
@@ -77,34 +47,30 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   __m256d avxTemp;
   __m256d coeficientesResultantesAVX_mA;
 
-  coeficientesDiagonais = ArmazenaCoeficientesDiagonais(hmA);
+  //loop operando por coluna
+  for (coluna = 0; coluna < (nIncognitas - 1); coluna++){
 
-  //loop operando pelo index do array de diagonais (e por consequente
-  //por index de coluna também)
-  for (int coluna = 0; coluna < (nIncognitas - 1); coluna++){
-
-
-    diagonal = *(coeficientesDiagonais + coluna);    
+    diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     linha = (coluna + 1) * nIncognitas; //as operações começam a partir da linha 1
     linhaInicio = linha + coluna;
+    //coluna  = 
 
-    //loop operando por linha
-    while(inicioColuna < (nIncognitas - 1)){
-    
-
-      valAbaixo = *(hmA + linha);
-
-      varK = valAbaixo / diagonal;
+    //loop operando por linha, começando abaixo da diagonal
+    for (int i = 0; i < (nIncognitas - 1); i++){
+      
+      inicioIndex = linhaInicio + (nIncognitas * i);
+      coeficienteInicial = *(hmA + inicioIndex);
+      varK = coeficienteInicial / diagonal;
       multiplicadorAVX = _mm256_set1_pd(varK);
 
-      // ?
+      // ? teste loop 2
       printf("\n\n === teste valor k ===\n");
-      printf("val: %f | diagonal: %f",valAbaixo, diagonal);
+      printf("val: %f | diagonal: %f",coeficienteInicial, diagonal);
 
       //loop operando sobe os coeficientes da linha
-      for (int j = 0; j < nIncognitas; j += 4) 
-      {
-        coeficientesOriginaisAVX_mA = _mm256_load_pd((hmA+linha) + j);
+      int coeficienteIndex = 0;
+      for (; coeficienteIndex < nIncognitas; coeficienteIndex += 4){
+        coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + linha + coeficienteIndex);
         /*
           ? 1.multiplicação AVX: multiplicador x coeficientes originais
           ? 2.subtração AVX: coeficientes origianais - coeficientes alterados
@@ -114,13 +80,18 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
         */
         avxTemp = _mm256_mul_pd(coeficientesOriginaisAVX_mA, multiplicadorAVX);
         coeficientesResultantesAVX_mA = _mm256_sub_pd(coeficientesOriginaisAVX_mA,avxTemp);
-
-        //_mm256_store_pd((hmA + linhaIndex)+j, coeficientesResultantesAVX_mA);
-
+       // _mm256_store_pd(hmA + linha + coeficienteIndex, coeficientesResultantesAVX_mA);
       }
+        //? teste loop 3
+        /*
+        */
+        printf("\n\n ===== teste valores originais ====\n");
+        for (int i = 0; i < 4; i++)
+        {
+          printf(" %f |",*(hmA + linha + coeficienteIndex));
+        }
     }
   }
-  free(coeficientesDiagonais);
 }
 
 void geraArquivos(char *nomeA, char *nomeB, int nIncognitas)
