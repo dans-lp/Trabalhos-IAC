@@ -55,8 +55,10 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     linhaInicio = linha + coluna;
     //coluna  = 
 
+    //?
+    printf("\n\n ---> iteração %d",coluna);
     //loop operando por linha, começando abaixo da diagonal
-    for (int i = 0; i < (nIncognitas - 1); i++){
+    for (int i = 0; i < (nIncognitas - (coluna + 1)); i++){
       
       inicioIndex = linhaInicio + (nIncognitas * i);
       coeficienteInicial = *(hmA + inicioIndex);
@@ -84,12 +86,12 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       }
         //? teste loop 3
         /*
-        */
         printf("\n\n ===== teste valores originais ====\n");
         for (int i = 0; i < 4; i++)
         {
           printf(" %f |",*(hmA + linha + coeficienteIndex));
         }
+        */
     }
   }
 }
