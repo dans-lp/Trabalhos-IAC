@@ -7,7 +7,6 @@
 #include "comum.h"
 #include "timer.h"
 
-
 // === Cabeçalho equation.cpp =================================
 //=============================================================
 void processaVetores(double *hmA, double *hvB, int nIncognitas);
@@ -37,6 +36,9 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   //loop operando por coluna
   for (coluna = 0; coluna < (nIncognitas - 1); coluna++){
 
+    printf("\n\n---->coluna: %d",coluna);
+
+
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     linha = (coluna + 1) * nIncognitas; //as operações começam a partir da linha 1
     linhaInicio = linha + coluna;
@@ -45,9 +47,12 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     //?
     printf("\n\n ---> iteração %d",coluna);
     */
+
     //loop operando por linha, começando abaixo da diagonal
     for (int i = 0; i < (nIncognitas - (coluna + 1)); i++){
-      
+
+      printf("\nlinha - i: %d",i);
+
       inicioIndex = linhaInicio + (nIncognitas * i);
       coeficienteInicial = *(hmA + inicioIndex);
       varK = coeficienteInicial / diagonal;
@@ -60,16 +65,16 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       */
 
       //loop operando sobe os coeficientes da linha
-      for (int coeficienteIndex = 0; coeficienteIndex < nIncognitas; coeficienteIndex += 4){
+      for (int j = 0; j < nIncognitas; j += 4){
         
-        coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + inicioIndex + coeficienteIndex);
+        coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + linha + j);
         avxTemp = _mm256_mul_pd(coeficientesOriginaisAVX_mA, multiplicadorAVX);
         coeficientesResultantesAVX_mA = _mm256_sub_pd(coeficientesOriginaisAVX_mA,avxTemp);
-       //_mm256_store_pd(hmA + linha + coeficienteIndex, coeficientesResultantesAVX_mA);
+       //_mm256_store_pd(hmA + linha + j, coeficientesResultantesAVX_mA);
       
         //? teste loop 3
         /*
-        if(coeficienteIndex == 0){
+        if(j == 0){
           printf("\n\n ===== teste valores originais ====\n");
           for (int i = 0; i < 4; i++){
             printf(" %f |",*(hmA + inicioIndex + i));
@@ -77,9 +82,11 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
         }
         */
       }
-      // ? alteração do valor do vetir B
+      // ? alteração do valor do vetor B
+      // ? finalização da alteração dos vetor
     }
   }
+  //? parte final da equação
 }
 
 void geraArquivos(char *nomeA, char *nomeB, int nIncognitas)
