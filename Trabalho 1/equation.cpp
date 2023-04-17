@@ -19,13 +19,12 @@ void geraArquivos(char *nomeA, char *nomeB, int nIncognitas);
 void processaVetores(double *hmA, double *hvB, int nIncognitas)
 {
   type_data diagonal;
-  type_data coeficienteInicial; 
+  type_data coeficienteAbaixo; 
   type_data varK;
   
   int coluna;
   int linha;
-  int linhaInicio;
-  int inicioIndex;
+  int coeficienteAbaixoIndex;
 
   // ? __m256d coeficientes_mA;
   __m256d coeficientesOriginaisAVX_mA;
@@ -40,8 +39,8 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
 
 
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
-    linha = (coluna + 1) * nIncognitas; //as operações começam a partir da linha 1
-    linhaInicio = linha + coluna;
+    //linha = (coluna + 1) * nIncognitas; //as operações começam a partir da linha 1
+    //linhaInicio = linha + coluna;
 
     /*
     //?
@@ -49,19 +48,20 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     */
 
     //loop operando por linha, começando abaixo da diagonal
-    for (int i = 0; i < (nIncognitas - (coluna + 1)); i++){
+    for (int i = 0; i < (nIncognitas - coluna); i++){
 
-      printf("\nlinha - i: %d",i);
+      linha = (i + 1) * nIncognitas; //as operações começam a partir da linha 1
 
-      inicioIndex = linhaInicio + (nIncognitas * i);
-      coeficienteInicial = *(hmA + inicioIndex);
-      varK = coeficienteInicial / diagonal;
+      coeficienteAbaixoIndex = linha + coluna;
+      coeficienteAbaixo = *(hmA + coeficienteAbaixoIndex);
+      varK = coeficienteAbaixo / diagonal;
       multiplicadorAVX = _mm256_set1_pd(varK);
+      printf("\nlinha - i: %d | coeficiente abaixo: %f | varK: %f",i, coeficienteAbaixo, varK);
 
       /*
       // ? teste loop 2
       printf("\n\n === teste valor k ===\n");
-      printf("val: %f | diagonal: %f",coeficienteInicial, diagonal);
+      printf("val: %f | diagonal: %f",coeficienteAbaixo, diagonal);
       */
 
       //loop operando sobe os coeficientes da linha
@@ -70,20 +70,27 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
         coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + linha + j);
         avxTemp = _mm256_mul_pd(coeficientesOriginaisAVX_mA, multiplicadorAVX);
         coeficientesResultantesAVX_mA = _mm256_sub_pd(coeficientesOriginaisAVX_mA,avxTemp);
-       //_mm256_store_pd(hmA + linha + j, coeficientesResultantesAVX_mA);
+       _mm256_store_pd(hmA + linha + j, coeficientesResultantesAVX_mA);
       
         //? teste loop 3
+        if(j == 0){
+          exibeMatriz(hmA, nIncognitas);
+
+        }
+
         /*
         if(j == 0){
           printf("\n\n ===== teste valores originais ====\n");
           for (int i = 0; i < 4; i++){
-            printf(" %f |",*(hmA + inicioIndex + i));
+            printf(" %f |",*(hmA + coeficienteAbaixoIndex + i));
           }
         }
         */
       }
       // ? alteração do valor do vetor B
       // ? finalização da alteração dos vetor
+
+      
     }
   }
   //? parte final da equação
