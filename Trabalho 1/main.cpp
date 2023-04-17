@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     
     // ! deletar depois
     //Gera arquivo da matrix A e vetor B
-    geraArquivos(filenameMatrizA, filenameVetorB, nIncognitas);
+    //geraArquivos(filenameMatrizA, filenameVetorB, nIncognitas);
     
     // Lê os dados dos arquivos
     // Matriz A

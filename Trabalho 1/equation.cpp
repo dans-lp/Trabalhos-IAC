@@ -7,15 +7,6 @@
 #include "comum.h"
 #include "timer.h"
 
-// === Cabeçalho equation.cpp =================================
-//=============================================================
-void processaVetores(double *hmA, double *hvB, int nIncognitas);
-
-/*Gera arquivos binarios contendo respectivamente uma matriz A
-  e um vetor B com valores aleatórios em double */
-void geraArquivos(char *nomeA, char *nomeB, int nIncognitas);
-//=============================================================
-
 void processaVetores(double *hmA, double *hvB, int nIncognitas)
 {
   int coluna;
@@ -38,13 +29,12 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
 
   //loop operando por coluna
   for (coluna = 0; coluna < (nIncognitas - 1); coluna++){
-
+    
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
-    printf("---->coluna: %d\n\n",coluna);
     
     //loop operando por linha
     for (int i = (coluna + 1); i < nIncognitas; i++){
-
+      
       linha = i * nIncognitas;
       linhaDiagonal = coluna * nIncognitas;
 
@@ -53,9 +43,6 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       varK = -1 * (coeficienteAbaixo / diagonal);
       multiplicadorAVX = _mm256_set1_pd(varK);
       
-      // ?
-      //printf("\nlinha - i: %d | coeficiente abaixo: %f | varK: %f",i, coeficienteAbaixo, varK);
-
       //loop operando sobe os coeficientes da linha
       for (int j = 0; j < nIncognitas; j += 4){
         
@@ -66,17 +53,16 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
         coeficientesResultantesAVX_mA = _mm256_add_pd(coeficientesOriginaisAVX_mA,avxTemp);
         _mm256_store_pd(hmA + linha + j, coeficientesResultantesAVX_mA);
       }
-      
-      valorLinha_vB = hvB[i];
+
+      valorLinha_vB = hvB[coluna];
       valorLinha_vB *= varK;
       hvB[i] += valorLinha_vB;
-
     }
-    //exibeMatriz(hmA, nIncognitas);
-    exibeVetor(hvB, nIncognitas);
   }
 }
 
+//gera arquivos binarios com valores aleatórios em double para testes
+/*
 void geraArquivos(char *nomeA, char *nomeB, int nIncognitas)
 {
   FILE *arq;
@@ -105,3 +91,4 @@ void geraArquivos(char *nomeA, char *nomeB, int nIncognitas)
   }
   fclose(arq);
 }
+*/
