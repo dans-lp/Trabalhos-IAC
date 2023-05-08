@@ -14,10 +14,13 @@
 struct thread_data{
   double *hmA;
   double *hvB;
+  
+  int coluna;
+  int diagonal;
 
   int Id;
   int qtdLinhas;
-  int offset;
+  //int offset = Id * qtdLinhas;
 } typedef Thread_data;
 
 
@@ -25,7 +28,7 @@ struct thread_data{
 
 void *ProcessaLinhas(void *p);
 
-void CalculaQtdLinhas(void *p);
+int CalculaQtdLinhas(int id, int nTotal);
 
 
 
@@ -45,17 +48,44 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   type_data valorLinha_vB;
   type_data varK;
 
+  // variaveus MMX
   __m256d coeficientesOriginaisAVX_mA;
   __m256d multiplicadorAVX;
   __m256d avxTemp;
   __m256d coeficientesResultantesAVX_mA;
   __m256d coeficientesLinhaDiagonalAVX;
 
+  //variaveis POXIS Threads
+  Thread_data dados[nThreads];
+  pthread_attr_t attr;
+  pthread_t thread[nThreads];
+  void *status;
+
+  //atributos threads
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+  int rc;
+
   //loop operando por coluna
   for (coluna = 0; coluna < (nIncognitas - 1); coluna++){
     
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     
+    
+
+    //inicialização das threads
+    for (int i = 0; i < nThreads; i++)
+    {
+      dados[i].hmA = hmA;
+      dados[i].hvB = hvB;
+      dados[i].coluna = coluna;
+      dados[i].diagonal = diagonal;
+
+      dados[i].Id = i;
+      dados[i].qtdLinhas = CalculaQtdLinhas(dados[i].Id, nThreads);
+    }
+    
+
     // transformar esse pedaço na função ProcessaLinhas
     
       //loop operando por linha

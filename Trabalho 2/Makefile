@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = –Wall -g -pthread -mavx -march=native
+CFLAGS = -Wall -g -pthread -mavx -march=native
 
 equation: main.cpp equation.cpp comum.cpp timer.cpp comum.h gpu.h timer.h thread.h
 	$(CC) $(CFLAGS) -o equation main.cpp equation.cpp 
