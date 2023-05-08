@@ -3,9 +3,33 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <immintrin.h> 
+#include<pthread.h>
 
 #include "comum.h"
+#include "thread.h"
 #include "timer.h"
+
+// structs ==================================================================
+
+struct thread_data{
+  double *hmA;
+  double *hvB;
+
+  int Id;
+  int qtdLinhas;
+  int offset;
+} typedef Thread_data;
+
+
+// protótipos de funções auxiliares =========================================
+
+void *ProcessaLinhas(void *p);
+
+void CalculaQtdLinhas(void *p);
+
+
+
+// ==========================================================================
 
 void processaVetores(double *hmA, double *hvB, int nIncognitas)
 {
@@ -32,32 +56,35 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     
-    //loop operando por linha
-    for (int i = (coluna + 1); i < nIncognitas; i++){
-      
-      linha = i * nIncognitas;
-      linhaDiagonal = coluna * nIncognitas;
+    // transformar esse pedaço na função ProcessaLinhas
+    
+      //loop operando por linha
+      for (int i = (coluna + 1); i < nIncognitas; i++){
 
-      coeficienteAbaixoIndex = linha + coluna;
-      coeficienteAbaixo = *(hmA + coeficienteAbaixoIndex);
-      varK = -1 * (coeficienteAbaixo / diagonal);
-      multiplicadorAVX = _mm256_set1_pd(varK);
-      
-      //loop operando sobe os coeficientes da linha
-      for (int j = 0; j < nIncognitas; j += 4){
-        
-        coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + linha + j);
-        coeficientesLinhaDiagonalAVX = _mm256_load_pd(hmA + linhaDiagonal + j); 
+        linha = i * nIncognitas;
+        linhaDiagonal = coluna * nIncognitas;
 
-        avxTemp = _mm256_mul_pd(coeficientesLinhaDiagonalAVX, multiplicadorAVX);
-        coeficientesResultantesAVX_mA = _mm256_add_pd(coeficientesOriginaisAVX_mA,avxTemp);
-        _mm256_store_pd(hmA + linha + j, coeficientesResultantesAVX_mA);
+        coeficienteAbaixoIndex = linha + coluna;
+        coeficienteAbaixo = *(hmA + coeficienteAbaixoIndex);
+        varK = -1 * (coeficienteAbaixo / diagonal);
+        multiplicadorAVX = _mm256_set1_pd(varK);
+
+        //loop operando sobe os coeficientes da linha
+        for (int j = 0; j < nIncognitas; j += 4){
+
+          coeficientesOriginaisAVX_mA = _mm256_load_pd(hmA + linha + j);
+          coeficientesLinhaDiagonalAVX = _mm256_load_pd(hmA + linhaDiagonal + j); 
+
+          avxTemp = _mm256_mul_pd(coeficientesLinhaDiagonalAVX, multiplicadorAVX);
+          coeficientesResultantesAVX_mA = _mm256_add_pd(coeficientesOriginaisAVX_mA,avxTemp);
+          _mm256_store_pd(hmA + linha + j, coeficientesResultantesAVX_mA);
+        }
+
+        valorLinha_vB = hvB[coluna];
+        valorLinha_vB *= varK;
+        hvB[i] += valorLinha_vB;
       }
-
-      valorLinha_vB = hvB[coluna];
-      valorLinha_vB *= varK;
-      hvB[i] += valorLinha_vB;
-    }
+    //
   }
 }
 
