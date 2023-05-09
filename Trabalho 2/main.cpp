@@ -46,9 +46,10 @@ int main(int argc, char *argv[]) {
     nIncognitas = atoi(argv[ARG_N_INCOGNITAS]);
     */
     
-    // ! deletar depois
+    // ! Rodar apenas para gerar arquivos
     //Gera arquivo da matrix A e vetor B
-    //geraArquivos(filenameMatrizA, filenameVetorB, nIncognitas);
+    geraArquivos(filenameMatrizA, filenameVetorB, nIncognitas);
+    
     
     // Lê os dados dos arquivos
     // Matriz A

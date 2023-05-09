@@ -20,7 +20,7 @@ struct thread_data{
 
   int Id;
   int qtdLinhas;
-  //int offset = Id * qtdLinhas;
+  int offset;
 } typedef Thread_data;
 
 
@@ -28,7 +28,7 @@ struct thread_data{
 
 void *ProcessaLinhas(void *p);
 
-int CalculaQtdLinhas(int id, int nTotal);
+void CalculaQtdLinhas(Thread_data *p, int coluna);
 
 
 
@@ -64,14 +64,14 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   //atributos threads
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  int rc;
+  //int rc;
 
   //loop operando por coluna
   for (coluna = 0; coluna < (nIncognitas - 1); coluna++){
     
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     
-    
+    CalculaQtdLinhas(dados, coluna);
 
     //inicialização das threads
     for (int i = 0; i < nThreads; i++)
@@ -80,11 +80,10 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       dados[i].hvB = hvB;
       dados[i].coluna = coluna;
       dados[i].diagonal = diagonal;
-
       dados[i].Id = i;
-      dados[i].qtdLinhas = CalculaQtdLinhas(dados[i].Id, nThreads);
+
+      // int rc = pthread_create();
     }
-    
 
     // transformar esse pedaço na função ProcessaLinhas
     
@@ -118,8 +117,23 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   }
 }
 
+void CalculaQtdLinhas(Thread_data *p, int coluna)
+{
+  int val = 0;
+  int totalLinhas = nIncognitas - (coluna + 1);
+  
+  for (int i = 0; i < nThreads; i++,  totalLinhas -= val){
+    val = totalLinhas / (nThreads - i);
+    p[i].qtdLinhas = val;
+    p[i].offset = nIncognitas - totalLinhas;
+  }
+}
+
+
+
 //gera arquivos binarios com valores aleatórios em double para testes
 /*
+*/
 void geraArquivos(char *nomeA, char *nomeB, int nIncognitas)
 {
   FILE *arq;
@@ -148,4 +162,3 @@ void geraArquivos(char *nomeA, char *nomeB, int nIncognitas)
   }
   fclose(arq);
 }
-*/
