@@ -122,14 +122,18 @@ void CalculaQtdLinhas(Thread_data *p, int coluna)
   int val = 0;
   int totalLinhas = nIncognitas - (coluna + 1);
   
-  for (int i = 0; i < nThreads; i++,  totalLinhas -= val){
+  for (int i = 0; i < nThreads; i++, totalLinhas -= val){
     val = totalLinhas / (nThreads - i);
     p[i].qtdLinhas = val;
-    p[i].offset = nIncognitas - totalLinhas;
+    p[i].offset = totalLinhas - (totalLinhas - val);
   }
 }
 
-
+/*
+  0 --> linha 1
+  1 --> linha 7
+  2 --> 
+*/
 
 //gera arquivos binarios com valores aleatórios em double para testes
 /*
