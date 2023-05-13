@@ -121,11 +121,13 @@ void CalculaQtdLinhas(Thread_data *p, int coluna)
 {
   int val = 0;
   int totalLinhas = nIncognitas - (coluna + 1);
-  
+  int offset = 0;
+
   for (int i = 0; i < nThreads; i++, totalLinhas -= val){
     val = totalLinhas / (nThreads - i);
     p[i].qtdLinhas = val;
-    p[i].offset = totalLinhas - (totalLinhas - val);
+    p[i].offset = offset;
+    offset += val;
   }
 }
 
