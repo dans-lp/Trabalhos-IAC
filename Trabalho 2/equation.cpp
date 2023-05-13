@@ -36,9 +36,12 @@ void CalculaQtdLinhas(Thread_data *p, int coluna);
 void processaVetores(double *hmA, double *hvB, int nIncognitas)
 {
   int coluna;
+  type_data diagonal;
+  
+  // *
+  /*
   int linha;
   
-  type_data diagonal;
   int linhaDiagonal;
   
   type_data coeficienteAbaixo; 
@@ -53,6 +56,7 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   __m256d avxTemp;
   __m256d coeficientesResultantesAVX_mA;
   __m256d coeficientesLinhaDiagonalAVX;
+  */
 
   //variaveis POXIS Threads
   Thread_data dados[nThreads];
@@ -65,6 +69,7 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
   //int rc;
 
+  
   //loop operando por coluna
   for (coluna = 0; coluna < (nIncognitas - 1); coluna++){
     
@@ -81,12 +86,15 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       dados[i].diagonal = diagonal;
       dados[i].Id = i;
 
-      // int rc = pthread_create();
+      int rc = pthread_create(&thread[i], &attr, ProcessaLinhas, (void *)&dados[i]);
+        if(rc) {
+            fprintf(stderr, "Erro ao criar a thread #%d\n", i);
+            exit(1);
+        }
     }
 
-    // transformar esse pedaço na função ProcessaLinhas
+    // * transformar esse pedaço na função ProcessaLinhas
     /*
-    */    
       //loop operando por linha
       for (int i = (coluna + 1); i < nIncognitas; i++){
 
@@ -113,6 +121,7 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
         valorLinha_vB *= varK;
         hvB[i] += valorLinha_vB;
       }
+    */    
     //
   }
 }
@@ -160,9 +169,10 @@ void *ProcessaLinhas(void *p)
   
   //loop operando por linha
   for (int i = data->offset; i < data->qtdLinhas; i++){
-    linha = data->offset + linhaDiagonal;
     linhaDiagonal = data->coluna * nIncognitas;
+    linha = data->offset + linhaDiagonal;
     
+    //processamento do coeficiente multiplicador
     coeficienteAbaixoIndex = linha + data->coluna;
     coeficienteAbaixo = *(data->hmA + coeficienteAbaixoIndex);
     varK = -1 * (coeficienteAbaixo / data->diagonal);
