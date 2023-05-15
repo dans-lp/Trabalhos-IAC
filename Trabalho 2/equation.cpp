@@ -1,3 +1,8 @@
+/*
+  Aluno: Daniel Peralta
+  Matrícula: 1811442
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -26,11 +31,15 @@ struct thread_data{
 
 // protótipos de funções auxiliares =========================================
 
+/*
+  Processamento do algoritmo do trabalho através das 
+  linhas dividas por threads*/
 void *ProcessaLinhas(void *p);
 
-void CalculaQtdLinhas(Thread_data *p, int coluna);
-
-
+/*
+  Gera arquivos binarios de matriz nIncognitas x nIncognitas, 
+  apenas para testes na maquina do aluno*/
+void geraArquivos(char *nomeA, char *nomeB, int nIncognitas);
 // ==========================================================================
 
 void processaVetores(double *hmA, double *hvB, int nIncognitas)
@@ -63,16 +72,16 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
 
     //inicialização das threads
     for (int i = 0; i < nThreads; i++){
+      
       dados[i].Id = i;
       dados[i].hmA = hmA;
       dados[i].hvB = hvB;
       dados[i].coluna = coluna;
       dados[i].diagonal = diagonal;
+      dados[i].offset = offset;
 
       val = totalLinhas / (nThreads - i);
       dados[i].qtdLinhas = val;
-      dados[i].offset = offset;
-      //printf("\nwatch Thread values id-%d -> opera das linhas %d + %d",dados[i].Id, dados[i].offset, dados[i].qtdLinhas);
       
       offset += val;
       totalLinhas -= val;
@@ -82,7 +91,6 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
         fprintf(stderr, "Erro ao criar a thread #%d\n", i);
         exit(1);
       }
-
     }
     //JOIN Threads
     for (int k = 0; k < nThreads; k++){
@@ -94,8 +102,6 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     }
     pthread_attr_destroy(&attr);
   }
-  //printf("\n\n\n\n linha do erro -> \n\n");
-  //exibeLinhaMatriz(hmA, 6, nIncognitas);
 }
 
 
@@ -113,18 +119,16 @@ void *ProcessaLinhas(void *p)
   type_data valorLinha_vB;
   type_data varK;
 
-  // variaveus MMX
+  // variaveis MMX
   __m256d coeficientesOriginaisAVX_mA;
   __m256d multiplicadorAVX;
   __m256d avxTemp;
   __m256d coeficientesResultantesAVX_mA;
   __m256d coeficientesLinhaDiagonalAVX;
-  
-  linhaDiagonal = data->coluna * nIncognitas;
-  
 
   //loop operando por linha
   for (int i = 0; i <= data->qtdLinhas; i++){
+    linhaDiagonal = data->coluna * nIncognitas;
 
     //processamento do coeficiente multiplicador
     linha = (i + data->offset) * nIncognitas;
@@ -145,25 +149,13 @@ void *ProcessaLinhas(void *p)
 
     valorLinha_vB = data->hvB[data->coluna];
     valorLinha_vB *= varK;
-    data->hvB[i] += valorLinha_vB;
+    data->hvB[i + data->offset] += valorLinha_vB;
 
   }
-
-  /*
-  if(data->Id == 1){ 
-      printf("\n>>>> Thread-%d work done!\n",data->Id);
-      //printf("\nlinha %d - coeficiente abaixo %f\n",i, coeficienteAbaixo); 
-      exibeLinhaMatriz(data->hmA, 8, nIncognitas ); 
-      printf("\n\n");
-    }
-  */  
-  
   pthread_exit(p);
 }
 
-//gera arquivos binarios com valores aleatórios em double para testes
-/*
-*/
+
 void geraArquivos(char *nomeA, char *nomeB, int nIncognitas)
 {
   FILE *arq;
