@@ -84,7 +84,7 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
       }
 
     }
-      
+    //JOIN Threads
     for (int k = 0; k < nThreads; k++){
       int rc = pthread_join(thread[k], &status);
       if (rc){
@@ -123,12 +123,11 @@ void *ProcessaLinhas(void *p)
   linhaDiagonal = data->coluna * nIncognitas;
   
 
-
   //loop operando por linha
-  for (int i = data->offset; i <= data->qtdLinhas; i++){
-    
+  for (int i = 0; i <= data->qtdLinhas; i++){
+
     //processamento do coeficiente multiplicador
-    linha = i * nIncognitas;
+    linha = (i + data->offset) * nIncognitas;
     coeficienteAbaixoIndex = linha + data->coluna;
     coeficienteAbaixo = *(data->hmA + coeficienteAbaixoIndex);
     varK = -1 * (coeficienteAbaixo / data->diagonal);
@@ -148,19 +147,16 @@ void *ProcessaLinhas(void *p)
     valorLinha_vB *= varK;
     data->hvB[i] += valorLinha_vB;
 
-    if(data->Id == 1){ 
-      printf("\nlinha %d - coeficiente abaixo %f\n",i, coeficienteAbaixo); 
-      //exibeLinhaMatriz(data->hmA, i, nIncognitas ); 
-    }
   }
-    
+
   /*
-   if(data->Id == 2){
-   printf("\n\n -> coluna: %d\n",data->coluna);
-   exibeMatriz(data->hmA, nIncognitas);
-   printf("\n\n\n");
-  }
-  */
+  if(data->Id == 1){ 
+      printf("\n>>>> Thread-%d work done!\n",data->Id);
+      //printf("\nlinha %d - coeficiente abaixo %f\n",i, coeficienteAbaixo); 
+      exibeLinhaMatriz(data->hmA, 8, nIncognitas ); 
+      printf("\n\n");
+    }
+  */  
   
   pthread_exit(p);
 }
