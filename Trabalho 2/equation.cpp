@@ -38,6 +38,7 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   int coluna;
   type_data diagonal;
   
+
   // *
   /*
   int linha;
@@ -62,12 +63,17 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
   Thread_data dados[nThreads];
   pthread_attr_t attr;
   pthread_t thread[nThreads];
-  void *status;
+  //void *status;
+
+  //variaveis para inicialização das threads
+  int val = 0;
+  int totalLinhas;
+  int offset;
 
   //atributos threads
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-  //int rc;
+  int rc;
 
   
   //loop operando por coluna
@@ -75,24 +81,33 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     
-    CalculaQtdLinhas(dados, coluna);
+    totalLinhas = nIncognitas - (coluna + 1);
+    offset = coluna + 1;
+    //CalculaQtdLinhas(dados, coluna);
 
     //inicialização das threads
     for (int i = 0; i < nThreads; i++)
     {
+      dados[i].Id = i;
       dados[i].hmA = hmA;
       dados[i].hvB = hvB;
       dados[i].coluna = coluna;
       dados[i].diagonal = diagonal;
-      dados[i].Id = i;
 
-      int rc = pthread_create(&thread[i], &attr, ProcessaLinhas, (void *)&dados[i]);
-        if(rc) {
-            fprintf(stderr, "Erro ao criar a thread #%d\n", i);
-            exit(1);
-        }
+      val = totalLinhas / (nThreads - i);
+      dados[i].qtdLinhas = val;
+      dados[i].offset = offset;
+      
+      offset += val;
+      totalLinhas -= val;
+
+      rc = pthread_create(&thread[i], &attr, ProcessaLinhas, (void *)&dados[i]);
+      if(rc) { 
+        fprintf(stderr, "Erro ao criar a thread #%d\n", i);
+        exit(1);
+      }
     }
-
+    //exibeMatriz(hmA, nIncognitas);
     // * transformar esse pedaço na função ProcessaLinhas
     /*
       //loop operando por linha
@@ -124,21 +139,9 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     */    
     //
   }
+  pthread_attr_destroy(&attr);
 }
 
-void CalculaQtdLinhas(Thread_data *p, int coluna)
-{
-  int val = 0;
-  int totalLinhas = nIncognitas - (coluna + 1);
-  int offset = 0;
-
-  for (int i = 0; i < nThreads; i++, totalLinhas -= val){
-    val = totalLinhas / (nThreads - i);
-    p[i].qtdLinhas = val;
-    p[i].offset = offset;
-    offset += val;
-  }
-}
 
 void *ProcessaLinhas(void *p)
 {
@@ -146,8 +149,6 @@ void *ProcessaLinhas(void *p)
   data = (Thread_data *)p;
   
   int linha;
-  
-  type_data diagonal;
   int linhaDiagonal;
   
   type_data coeficienteAbaixo; 
@@ -162,21 +163,26 @@ void *ProcessaLinhas(void *p)
   __m256d avxTemp;
   __m256d coeficientesResultantesAVX_mA;
   __m256d coeficientesLinhaDiagonalAVX;
+  
+  linhaDiagonal = data->coluna * nIncognitas;
+  
+  if(data->Id == 4){
+    printf("\n>>> Info Thread-%d\n",data->Id);
+    printf("offset: %d, qtdLinhas: %d \n",data->offset, data->qtdLinhas);
+  }
+  /*
+  */
 
-  
-  
-  printf(">>> Calculando a partir da linha %d\n", data->offset);
-  
   //loop operando por linha
   for (int i = data->offset; i < data->qtdLinhas; i++){
-    linhaDiagonal = data->coluna * nIncognitas;
-    linha = data->offset + linhaDiagonal;
     
     //processamento do coeficiente multiplicador
+    linha = i * nIncognitas;
     coeficienteAbaixoIndex = linha + data->coluna;
     coeficienteAbaixo = *(data->hmA + coeficienteAbaixoIndex);
     varK = -1 * (coeficienteAbaixo / data->diagonal);
     multiplicadorAVX = _mm256_set1_pd(varK);
+    //printf("thread %d | linha %d | coeficienteAbaixo %f | varK %f\n",data->Id, linha, coeficienteAbaixo, varK);
     
     //loop operando sobe os coeficientes da linha
     for (int j = 0; j < nIncognitas; j += 4){
