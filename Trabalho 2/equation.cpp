@@ -67,7 +67,7 @@ void processaVetores(double *hmA, double *hvB, int nIncognitas)
     
     diagonal = *(hmA + (coluna * nIncognitas) + coluna);
     
-    totalLinhas = nIncognitas - (coluna + 2);
+    totalLinhas = nIncognitas - (coluna + 1);
     offset = coluna + 1;
 
     //inicialização das threads
@@ -127,7 +127,7 @@ void *ProcessaLinhas(void *p)
   __m256d coeficientesLinhaDiagonalAVX;
 
   //loop operando por linha
-  for (int i = 0; i <= data->qtdLinhas; i++){
+  for (int i = 0; i < data->qtdLinhas; i++){
     linhaDiagonal = data->coluna * nIncognitas;
 
     //processamento do coeficiente multiplicador

@@ -1,2 +1,2 @@
 // a constante vai virar uma variável configurável pela linha de comando
-int nThreads = 5;
+int nThreads = 42;
